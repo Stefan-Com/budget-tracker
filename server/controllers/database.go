@@ -11,18 +11,21 @@ import (
 var database *sql.DB
 
 func DB() (*sql.DB, error) {
-	var user, password, url, name = os.Getenv("DATABASE_USER"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("URL"), os.Getenv("DATABASE_NAME")
-	var statement = user + ":" + password + "@tcp(" + url + ")/" + name
+	var user = os.Getenv("DATABASE_USER")
+	var password = os.Getenv("DATABASE_PASSWORD")
+	var url = os.Getenv("DATABASE_URL")
+	var name = os.Getenv("DATABASE_NAME")
+	var statement = fmt.Sprintf("%v:%v@tcp(%v)/%v", user, password, url, name)
 	// Open database connection
 	db, err := sql.Open("mysql", statement)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to open database, \n%v\n ", err)
+		return nil, err
 	}
 	// Test database connection
 	err = db.Ping()
 	if err != nil {
 		db.Close()
-		return nil, fmt.Errorf("Failed to ping database, \n%v\n", err)
+		return nil, err
 	}
 
 	// Return the database and no error
@@ -35,7 +38,6 @@ func Main() error {
 	database, err = DB()
 	if err != nil {
 		defer database.Close()
-		fmt.Printf("There has been an error: %v\n", err)
 		return err
 	}
 	return nil

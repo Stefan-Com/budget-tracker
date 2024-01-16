@@ -5,13 +5,19 @@ import (
 	"server/controllers"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 var PORT = "8000"
 
 func main() {
-	router := gin.Default()
-	err := controllers.Main()
+	router := gin.New()
+	err := godotenv.Load("../.env")
+	if err != nil {
+		panic(err)
+	}
+
+	err = controllers.Main()
 	if err != nil {
 		panic(err)
 	}
@@ -39,16 +45,6 @@ func main() {
 		}
 		controllers.SendResponse(ctx, http.StatusOK, "success", "Succesfully logged out!")
 	})
-
-	//TODO: add CORS
-	// CORSHandler := cors.New(cors.Options{
-	// 	AllowedOrigins:   []string{"http://localhost:5173"},
-	// 	AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE"},
-	// 	AllowCredentials: true,
-	// 	Debug:            true,
-	// })
-
-	// router.Use(CORSHandler())
 
 	err = router.Run(":" + PORT)
 	if err != nil {
