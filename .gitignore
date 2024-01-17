@@ -8,4 +8,4 @@ client/.env.*
 client/!.env.example
 client/vite.config.js.timestamp-*
 client/vite.config.ts.timestamp-*
-server/.env
+.env
