@@ -29,12 +29,7 @@ type Transaction struct {
 }
 
 func GetTransactions(ctx *gin.Context) {
-	var transactionsTable Transaction
-	err := ctx.BindJSON(&transactionsTable)
-	if err != nil {
-		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
-	}
+	var transactionType = ctx.Param("type")
 
 	UserId, err := VerifySessionID(ctx)
 	if err == sql.ErrNoRows || err == http.ErrNoCookie {
@@ -46,7 +41,7 @@ func GetTransactions(ctx *gin.Context) {
 	}
 	var transactions []Transaction
 	// Select every row that has the ParentId = to the respective UserId
-	rows, err := database.Query("SELECT * FROM "+transactionsTable.Table+" WHERE ParentId = ?", UserId)
+	rows, err := database.Query("SELECT * FROM "+transactionType+" WHERE ParentId = ?", UserId)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return
@@ -63,7 +58,7 @@ func GetTransactions(ctx *gin.Context) {
 			&transaction.Recurring, &transaction.Interval, &transaction.Category,
 			&transaction.FileURL, &transaction.Taxxed, &transaction.Tax, &transaction.Fulfilled,
 		)
-		transaction.Table = transactionsTable.Table
+		transaction.Table = transactionType
 		if err != nil {
 			SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 			return
@@ -77,6 +72,7 @@ func GetTransactions(ctx *gin.Context) {
 }
 
 func AddTransaction(ctx *gin.Context) {
+	var transactionType = ctx.Param("type")
 	var transaction Transaction
 	var err error = nil
 	err = ctx.BindJSON(&transaction)
@@ -94,7 +90,7 @@ func AddTransaction(ctx *gin.Context) {
 		return
 	}
 
-	var query string = "INSERT INTO " + transaction.Table + " (ParentId, Title, Description, Currency, PaymentMethod, Amount, Participant, Recurring, `Interval`, Category, FileURL, Taxxed, Tax, Fulfilled) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	var query string = "INSERT INTO " + transactionType + " (ParentId, Title, Description, Currency, PaymentMethod, Amount, Participant, Recurring, `Interval`, Category, FileURL, Taxxed, Tax, Fulfilled) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 	// Insert the transaction into the database
 	_, err = database.Exec(query,
@@ -112,17 +108,11 @@ func AddTransaction(ctx *gin.Context) {
 		return
 	}
 
-	var transactionType string
-	if transaction.Table == "expenses" {
-		transactionType = "expense"
-	} else {
-		transactionType = "income"
-	}
-
 	// Set status to OK and send success msg to user
 	SendResponse(ctx, http.StatusCreated, "success", "Succesfully added "+transactionType+"!")
 }
 func DeleteTransaction(ctx *gin.Context) {
+	var transactionType = ctx.Param("type")
 	var transaction Transaction
 	// Decode body into transaction var
 	err := ctx.BindJSON(&transaction)
@@ -147,18 +137,13 @@ func DeleteTransaction(ctx *gin.Context) {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return
 	}
-	var transactionType string
-	if transaction.Table == "expenses" {
-		transactionType = "expense"
-	} else {
-		transactionType = "income"
-	}
 
 	// Set status to OK and send success msg
 	SendResponse(ctx, http.StatusOK, "success", "Succesfully deleted "+transactionType+"!")
 }
 
 func EditTransaction(ctx *gin.Context) {
+	var transactionType = ctx.Param("type")
 	var transaction Transaction
 	err := ctx.BindJSON(&transaction)
 	if err != nil {
@@ -188,13 +173,6 @@ func EditTransaction(ctx *gin.Context) {
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return
-	}
-
-	var transactionType string
-	if transaction.Table == "expenses" {
-		transactionType = "expense"
-	} else {
-		transactionType = "income"
 	}
 
 	SendResponse(ctx, http.StatusOK, "success", "Succesfully edited "+transactionType+"!")

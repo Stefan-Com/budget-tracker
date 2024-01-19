@@ -32,10 +32,10 @@ func main() {
 	router.PATCH("/categories", controllers.EditCategory)
 	router.DELETE("/categories", controllers.DeleteCategory)
 	// Transactions
-	router.PUT("/transactions", controllers.GetTransactions)
-	router.POST("/transactions", controllers.AddTransaction)
-	router.PATCH("/transactions", controllers.EditTransaction)
-	router.DELETE("/transactions", controllers.DeleteTransaction)
+	router.GET("/transactions/:type", controllers.GetTransactions)
+	router.POST("/transactions/:type", controllers.AddTransaction)
+	router.PATCH("/transactions/:type", controllers.EditTransaction)
+	router.DELETE("/transactions/:type", controllers.DeleteTransaction)
 	// Cookies
 	router.DELETE("/logout", func(ctx *gin.Context) {
 		err := controllers.Logout(ctx)

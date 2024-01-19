@@ -1,15 +1,15 @@
+import { PORT } from "./utils";
+
 //* Expenses/Incomes controllers
 export async function GetTransactions(table: "incomes" | "expenses" | null) {
   if (!table) return
   return new Promise(async (resolve, reject) => {
-    const body = JSON.stringify({ table: table })
-    const response = await fetch("http://localhost:8000/transactions", {
-      method: "PUT",
-      body: body,
+    const response = await fetch(`http://localhost:${PORT}/transactions/${table}`, {
+      method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
     });
     const data = await response.json();
     if (data.status == "error") resolve(null);
@@ -27,9 +27,8 @@ export async function EditTransaction(info: Transaction | null) {
       tax: parseFloat(String(info.tax)),
       taxxed: !!info.taxxed,
       recurring: !!info.recurring,
-      table: info.table
     });
-    const response = await fetch("http://localhost:8000/transactions", {
+    const response = await fetch(`http://localhost:${PORT}/transactions/${info.table}`, {
       method: "PATCH",
       body: body,
       credentials: "include",
@@ -52,10 +51,9 @@ export async function AddTransaction(info: Transaction | null) {
       tax: parseFloat(String(info.tax)),
       taxxed: !!info.taxxed,
       recurring: !!info.recurring,
-      table: info.table
     });
 
-    const response = await fetch("http://localhost:8000/transactions", {
+    const response = await fetch(`http://localhost:${PORT}/transactions/${info.table}`, {
       method: "POST",
       body: body,
       credentials: "include",
@@ -71,8 +69,8 @@ export async function AddTransaction(info: Transaction | null) {
 export async function DeleteTransaction(info: Transaction | null) {
   if (!info) return
   return new Promise(async (resolve, reject) => {
-    const body = JSON.stringify({ Id: info.id, table: info.table });
-    const response = await fetch("http://localhost:8000/transactions", {
+    const body = JSON.stringify({ Id: info.id });
+    const response = await fetch(`http://localhost:${PORT}/transactions/${info.table}`, {
       method: "DELETE",
       body: body,
       credentials: "include",
@@ -89,7 +87,7 @@ export async function DeleteTransaction(info: Transaction | null) {
 export async function deleteCategory(info: Category) {
   return new Promise(async (resolve, reject) => {
     const body = JSON.stringify({ Id: info.id });
-    const response = await fetch("http://localhost:8000/categories", {
+    const response = await fetch(`http://localhost:${PORT}/categories`, {
       method: "DELETE",
       body: body,
       credentials: "include",
@@ -110,7 +108,7 @@ export async function addCategory(info: Category) {
       spent: parseFloat(String(info.spent)),
       gotten: parseFloat(String(info.gotten)),
     });
-    const response = await fetch("http://localhost:8000/categories", {
+    const response = await fetch(`http://localhost:${PORT}/categories`, {
       method: "POST",
       body: body,
       headers: {
@@ -132,7 +130,7 @@ export async function editCategory(info: Category | null) {
       budget: parseFloat(String(info.budget)),
       gotten: parseFloat(String(info.gotten)),
     });
-    const response = await fetch("http://localhost:8000/categories", {
+    const response = await fetch(`http://localhost:${PORT}/categories`, {
       method: "PATCH",
       body: body,
       credentials: "include",
