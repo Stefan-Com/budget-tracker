@@ -12,7 +12,10 @@ func Logout(ctx *gin.Context) error {
 	if err == http.ErrNoCookie || err != nil {
 		return err
 	}
-	DeleteOldSession(cookie)
+	err = DeleteOldSession(cookie)
+	if err != nil {
+		return err
+	}
 
 	// Remove cookie
 	ctx.SetCookie("logged_in_cookie", "", -1, "/", "localhost", true, true)

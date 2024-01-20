@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -159,7 +158,6 @@ func EditTransaction(ctx *gin.Context) {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return
 	}
-	fmt.Println(transaction.Table)
 	var query string = "UPDATE " + transaction.Table + " SET `Title` = ?, `Description` = ?, `Currency` = ?, `PaymentMethod` = ?, `Amount` = ?, `Participant` = ?, `Recurring` = ?, `Interval` = ?, `Category` = ?, `FileURL` = ?, `Taxxed` = ?, `Tax` = ?, `Fulfilled` = ? WHERE `Id` = ? AND `ParentId` = ?"
 	_, err = database.Exec(query,
 		transaction.Title, transaction.Description,
