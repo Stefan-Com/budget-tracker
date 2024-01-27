@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,8 +15,9 @@ func ComparePassword(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
-func SendResponse(ctx *gin.Context, code int, status any, response any) {
-	ctx.IndentedJSON(code, gin.H{
+func SendResponse(ctx *fiber.Ctx, code int, status any, response any) error {
+	ctx.Status(code)
+	return ctx.JSON(fiber.Map{
 		"status":   status,
 		"response": response,
 	})

@@ -3,21 +3,29 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func Logout(ctx *gin.Context) error {
+func Logout(ctx *fiber.Ctx) error {
 	// Get the value of the cookie
-	cookie, err := ctx.Cookie("logged_in_cookie")
-	if err == http.ErrNoCookie || err != nil {
-		return err
+	cookie := ctx.Cookies("logged_in_cookie")
+	if cookie == "" {
+		return http.ErrNoCookie
 	}
-	err = DeleteOldSession(cookie)
+	err := DeleteOldSession(cookie)
 	if err != nil {
 		return err
 	}
 
 	// Remove cookie
-	ctx.SetCookie("logged_in_cookie", "", -1, "/", "localhost", true, true)
+	ctx.Cookie(&fiber.Cookie{
+		Name:     "logged_in_cookie",
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/",
+		Domain:   "localhost",
+		Secure:   true,
+		HTTPOnly: true,
+	})
 	return nil
 }

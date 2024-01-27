@@ -26,6 +26,9 @@
 
   onMount(async () => {
     categories = await getCategories();
+    categories = categories.filter(
+      (category: Category) => category.type == "income",
+    );
     if (!categories) categories = [];
     incomes = await GetTransactions("incomes");
     if (!incomes) incomes = [];

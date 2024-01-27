@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 type Transaction struct {
@@ -27,23 +27,23 @@ type Transaction struct {
 	FileURL       string  `json:"fileurl"`
 }
 
-func GetTransactions(ctx *gin.Context) {
-	var transactionType = ctx.Param("type")
+func GetTransactions(ctx *fiber.Ctx) error {
+	var transactionType = ctx.Params("type")
 
 	UserId, err := VerifySessionID(ctx)
 	if err == sql.ErrNoRows || err == http.ErrNoCookie {
 		SendResponse(ctx, http.StatusNotFound, "error", "Couldn't find cookie or session ID")
-		return
+		return err
 	} else if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 	var transactions []Transaction
 	// Select every row that has the ParentId = to the respective UserId
 	rows, err := database.Query("SELECT * FROM "+transactionType+" WHERE ParentId = ?", UserId)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	// Loop over the selected rows
@@ -60,33 +60,33 @@ func GetTransactions(ctx *gin.Context) {
 		transaction.Table = transactionType
 		if err != nil {
 			SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-			return
+			return err
 		}
 
 		transactions = append(transactions, transaction)
 	}
 
 	// Send transactions back to the client
-	SendResponse(ctx, http.StatusOK, "success", transactions)
+	return SendResponse(ctx, http.StatusOK, "success", transactions)
 }
 
-func AddTransaction(ctx *gin.Context) {
-	var transactionType = ctx.Param("type")
+func AddTransaction(ctx *fiber.Ctx) error {
+	var transactionType = ctx.Params("type")
 	var transaction Transaction
 	var err error = nil
-	err = ctx.BindJSON(&transaction)
+	err = ctx.BodyParser(&transaction)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	transaction.ParentId, err = VerifySessionID(ctx)
 	if err == sql.ErrNoRows || err == http.ErrNoCookie {
 		SendResponse(ctx, http.StatusNotFound, "error", "Couldn't find cookie or session ID")
-		return
+		return err
 	} else if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	var query string = "INSERT INTO " + transactionType + " (ParentId, Title, Description, Currency, PaymentMethod, Amount, Participant, Recurring, `Interval`, Category, FileURL, Taxxed, Tax, Fulfilled) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -104,59 +104,59 @@ func AddTransaction(ctx *gin.Context) {
 
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	// Set status to OK and send success msg to user
-	SendResponse(ctx, http.StatusCreated, "success", "Succesfully added "+transactionType+"!")
+	return SendResponse(ctx, http.StatusCreated, "success", "Succesfully added "+transactionType[:len(transactionType)-1]+"!")
 }
-func DeleteTransaction(ctx *gin.Context) {
-	var transactionType = ctx.Param("type")
+func DeleteTransaction(ctx *fiber.Ctx) error {
+	var transactionType = ctx.Params("type")
 	var transaction Transaction
 	// Decode body into transaction var
-	err := ctx.BindJSON(&transaction)
+	err := ctx.BodyParser(&transaction)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	transaction.ParentId, err = VerifySessionID(ctx)
 	if err == sql.ErrNoRows || err == http.ErrNoCookie {
 		// Error when the session ID doesn't exist in the db or cookie isn't found
 		SendResponse(ctx, http.StatusNotFound, "error", "Couldn't find cookie or session ID")
-		return
+		return err
 	} else if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	// Delete the transaction that has the coresponding ID and parentid (respective user id)
-	_, err = database.Exec("DELETE FROM "+transaction.Table+" WHERE Id = ? AND ParentId = ?", transaction.Id, transaction.ParentId)
+	_, err = database.Exec("DELETE FROM "+"`"+transactionType+"`"+" WHERE Id = ? AND ParentId = ?", transaction.Id, transaction.ParentId)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	// Set status to OK and send success msg
-	SendResponse(ctx, http.StatusOK, "success", "Succesfully deleted "+transactionType+"!")
+	return SendResponse(ctx, http.StatusOK, "success", "Succesfully deleted "+transactionType[:len(transactionType)-1]+"!")
 }
 
-func EditTransaction(ctx *gin.Context) {
-	var transactionType = ctx.Param("type")
+func EditTransaction(ctx *fiber.Ctx) error {
+	var transactionType = ctx.Params("type")
 	var transaction Transaction
-	err := ctx.BindJSON(&transaction)
+	err := ctx.BodyParser(&transaction)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
 	transaction.ParentId, err = VerifySessionID(ctx)
 	if err == sql.ErrNoRows || err == http.ErrNoCookie {
 		SendResponse(ctx, http.StatusNotFound, "error", "Couldn't find cookie or session ID")
-		return
+		return err
 	} else if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 	var query string = "UPDATE " + transaction.Table + " SET `Title` = ?, `Description` = ?, `Currency` = ?, `PaymentMethod` = ?, `Amount` = ?, `Participant` = ?, `Recurring` = ?, `Interval` = ?, `Category` = ?, `FileURL` = ?, `Taxxed` = ?, `Tax` = ?, `Fulfilled` = ? WHERE `Id` = ? AND `ParentId` = ?"
 	_, err = database.Exec(query,
@@ -170,8 +170,8 @@ func EditTransaction(ctx *gin.Context) {
 	)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-		return
+		return err
 	}
 
-	SendResponse(ctx, http.StatusOK, "success", "Succesfully edited "+transactionType+"!")
+	return SendResponse(ctx, http.StatusOK, "success", "Succesfully edited "+transactionType[:len(transactionType)-1]+"!")
 }

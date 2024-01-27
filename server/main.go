@@ -4,14 +4,15 @@ import (
 	"net/http"
 	"server/controllers"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 )
 
 var PORT = "8000"
 
 func main() {
-	router := gin.New()
+	router := fiber.New()
 	err := godotenv.Load("../.env")
 	if err != nil {
 		panic(err)
@@ -22,31 +23,36 @@ func main() {
 		panic(err)
 	}
 
-	router.Use(CORSMiddleware())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:5173",
+		AllowMethods:     "GET, POST, PATCH, DELETE",
+		AllowHeaders:     "Origin, Content-Type",
+		AllowCredentials: true,
+	}))
 
-	router.POST("/register", controllers.Register)
-	router.POST("/login", controllers.Login)
+	router.Post("/register", controllers.Register)
+	router.Post("/login", controllers.Login)
 	// Categories
-	router.GET("/categories", controllers.GetCategories)
-	router.POST("/categories", controllers.AddCategory)
-	router.PATCH("/categories", controllers.EditCategory)
-	router.DELETE("/categories", controllers.DeleteCategory)
+	router.Get("/categories", controllers.GetCategories)
+	router.Post("/categories", controllers.AddCategory)
+	router.Patch("/categories", controllers.EditCategory)
+	router.Delete("/categories", controllers.DeleteCategory)
 	// Transactions
-	router.GET("/transactions/:type", controllers.GetTransactions)
-	router.POST("/transactions/:type", controllers.AddTransaction)
-	router.PATCH("/transactions/:type", controllers.EditTransaction)
-	router.DELETE("/transactions/:type", controllers.DeleteTransaction)
+	router.Get("/transactions/:type", controllers.GetTransactions)
+	router.Post("/transactions/:type", controllers.AddTransaction)
+	router.Patch("/transactions/:type", controllers.EditTransaction)
+	router.Delete("/transactions/:type", controllers.DeleteTransaction)
 	// Cookies
-	router.DELETE("/logout", func(ctx *gin.Context) {
+	router.Delete("/logout", func(ctx *fiber.Ctx) error {
 		err := controllers.Logout(ctx)
 		if err != nil {
 			controllers.SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-			return
+			return err
 		}
-		controllers.SendResponse(ctx, http.StatusOK, "success", "Succesfully logged out!")
+		return controllers.SendResponse(ctx, http.StatusOK, "success", "Succesfully logged out!")
 	})
 
-	err = router.Run(":" + PORT)
+	err = router.Listen(":" + PORT)
 	if err != nil {
 		panic(err)
 	}

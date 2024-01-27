@@ -4,9 +4,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 func GenerateSessionId(length int) (string, error) {
@@ -43,13 +44,13 @@ func DeleteOldSession(ID string) error {
 	}
 	return nil
 }
-func VerifySessionID(ctx *gin.Context) (int, error) {
+func VerifySessionID(ctx *fiber.Ctx) (int, error) {
 	// Get cookie
-	cookie, err := ctx.Cookie("logged_in_cookie")
+	cookie := ctx.Cookies("logged_in_cookie")
 
 	// If cookie isn't found, return -1 as id
-	if err != nil {
-		return -1, err
+	if cookie == "" {
+		return -1, http.ErrNoCookie
 	}
 
 	var UserId int
@@ -57,7 +58,7 @@ func VerifySessionID(ctx *gin.Context) (int, error) {
 
 	// Select the UserID and Expiring date from db
 	row := database.QueryRow("SELECT UserId, ExpiresAt FROM sessions WHERE ID = ?", cookie)
-	err = row.Scan(&UserId, &ExpiresAtStr)
+	err := row.Scan(&UserId, &ExpiresAtStr)
 
 	if err != nil {
 		return -1, err
