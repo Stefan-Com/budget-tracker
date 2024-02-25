@@ -24,26 +24,27 @@ func main() {
 	}
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173",
+		AllowOrigins:     "http://localhost:9000",
 		AllowMethods:     "GET, POST, PATCH, DELETE",
 		AllowHeaders:     "Origin, Content-Type",
 		AllowCredentials: true,
 	}))
 
-	router.Post("/register", controllers.Register)
-	router.Post("/login", controllers.Login)
+	api := router.Group("/api")
+	api.Post("/register", controllers.Register)
+	api.Post("/login", controllers.Login)
 	// Categories
-	router.Get("/categories", controllers.GetCategories)
-	router.Post("/categories", controllers.AddCategory)
-	router.Patch("/categories", controllers.EditCategory)
-	router.Delete("/categories", controllers.DeleteCategory)
+	api.Get("/categories", controllers.GetCategories)
+	api.Post("/categories", controllers.AddCategory)
+	api.Patch("/categories", controllers.EditCategory)
+	api.Delete("/categories", controllers.DeleteCategory)
 	// Transactions
-	router.Get("/transactions/:type", controllers.GetTransactions)
-	router.Post("/transactions/:type", controllers.AddTransaction)
-	router.Patch("/transactions/:type", controllers.EditTransaction)
-	router.Delete("/transactions/:type", controllers.DeleteTransaction)
+	api.Get("/transactions/:type", controllers.GetTransactions)
+	api.Post("/transactions/:type", controllers.AddTransaction)
+	api.Patch("/transactions/:type", controllers.EditTransaction)
+	api.Delete("/transactions/:type", controllers.DeleteTransaction)
 	// Cookies
-	router.Delete("/logout", func(ctx *fiber.Ctx) error {
+	api.Delete("/logout", func(ctx *fiber.Ctx) error {
 		err := controllers.Logout(ctx)
 		if err != nil {
 			controllers.SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())

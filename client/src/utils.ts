@@ -1,7 +1,7 @@
 // Get categories
 export async function getCategories() {
   return new Promise(async (resolve, reject) => {
-    const response = await fetch("http://localhost:8000/categories", {
+    const response = await fetch(`http://localhost:${PORT}/api/categories`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -49,4 +49,4 @@ export function checkIfValidNumberInput(event: any) {
 
 export let CURRENCIES = ["RON", "USD", "EUR", "GBP"];
 export let paymentMethods = ["VISA", "CASH", "MasterCard", "George"];
-export let PORT = "8000"
+export let PORT = "9000"
