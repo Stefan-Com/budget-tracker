@@ -25,10 +25,10 @@
 
   onMount(async () => {
     categories = await getCategories();
-    categories = categories.filter(
-      (category: Category) => category.type == "expense",
-    );
     if (!categories) categories = [];
+    categories = categories.filter(
+      (category: Category) => category.type == "expense"
+    );
     expenses = await GetTransactions("expenses");
     if (!expenses) expenses = [];
     form = document.getElementById("form") || { hidden: false };
