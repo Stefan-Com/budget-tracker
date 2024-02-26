@@ -39,31 +39,12 @@ func GetTransactions(ctx *fiber.Ctx) error {
 		return err
 	}
 	var transactions []Transaction
+
 	// Select every row that has the ParentId = to the respective UserId
-	rows, err := database.Query("SELECT * FROM "+transactionType+" WHERE ParentId = ?", UserId)
+	err = DB.Table(transactionType).Where("parent_id = ?", UserId).Find(&transactions).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
-	}
-
-	// Loop over the selected rows
-	for rows.Next() {
-		var transaction Transaction
-		// Get the values from each column
-		err = rows.Scan(
-			&transaction.Id, &transaction.ParentId, &transaction.Title,
-			&transaction.Description, &transaction.Currency, &transaction.PaymentMethod,
-			&transaction.Amount, &transaction.DateCreated, &transaction.Participant,
-			&transaction.Recurring, &transaction.Interval, &transaction.Category,
-			&transaction.FileURL, &transaction.Taxxed, &transaction.Tax, &transaction.Fulfilled,
-		)
-		transaction.Table = transactionType
-		if err != nil {
-			SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-			return err
-		}
-
-		transactions = append(transactions, transaction)
 	}
 
 	// Send transactions back to the client
@@ -89,18 +70,8 @@ func AddTransaction(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	var query string = "INSERT INTO " + transactionType + " (ParentId, Title, Description, Currency, PaymentMethod, Amount, Participant, Recurring, `Interval`, Category, FileURL, Taxxed, Tax, Fulfilled) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-
 	// Insert the transaction into the database
-	_, err = database.Exec(query,
-		&transaction.ParentId, &transaction.Title,
-		&transaction.Description, &transaction.Currency,
-		&transaction.PaymentMethod, &transaction.Amount,
-		&transaction.Participant, &transaction.Recurring,
-		&transaction.Interval, &transaction.Category,
-		&transaction.FileURL, &transaction.Taxxed,
-		&transaction.Tax, &transaction.Fulfilled,
-	)
+	err = DB.Table(transactionType).Create(&transaction).Error
 
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
@@ -110,6 +81,7 @@ func AddTransaction(ctx *fiber.Ctx) error {
 	// Set status to OK and send success msg to user
 	return SendResponse(ctx, http.StatusCreated, "success", "Succesfully added "+transactionType[:len(transactionType)-1]+"!")
 }
+
 func DeleteTransaction(ctx *fiber.Ctx) error {
 	var transactionType = ctx.Params("type")
 	var transaction Transaction
@@ -131,7 +103,7 @@ func DeleteTransaction(ctx *fiber.Ctx) error {
 	}
 
 	// Delete the transaction that has the coresponding ID and parentid (respective user id)
-	_, err = database.Exec("DELETE FROM "+"`"+transactionType+"`"+" WHERE Id = ? AND ParentId = ?", transaction.Id, transaction.ParentId)
+	err = DB.Table(transactionType).Where("id = ? AND parent_id = ?", transaction.Id, transaction.ParentId).Delete(&Transaction{}).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
@@ -158,16 +130,7 @@ func EditTransaction(ctx *fiber.Ctx) error {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
 	}
-	var query string = "UPDATE " + transaction.Table + " SET `Title` = ?, `Description` = ?, `Currency` = ?, `PaymentMethod` = ?, `Amount` = ?, `Participant` = ?, `Recurring` = ?, `Interval` = ?, `Category` = ?, `FileURL` = ?, `Taxxed` = ?, `Tax` = ?, `Fulfilled` = ? WHERE `Id` = ? AND `ParentId` = ?"
-	_, err = database.Exec(query,
-		transaction.Title, transaction.Description,
-		transaction.Currency, transaction.PaymentMethod,
-		transaction.Amount, transaction.Participant,
-		transaction.Recurring, transaction.Interval,
-		transaction.Category, transaction.FileURL,
-		transaction.Taxxed, transaction.Tax,
-		transaction.Fulfilled, transaction.Id, transaction.ParentId,
-	)
+	err = DB.Table(transactionType).Where("id = ? AND parent_id = ?", transaction.Id, transaction.ParentId).Updates(&transaction).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err

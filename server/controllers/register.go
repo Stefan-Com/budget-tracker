@@ -23,10 +23,10 @@ func Register(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	var emailExists int
+	var emailExists int64
 
 	// Check if email already exists
-	err = database.QueryRow("SELECT COUNT(*) FROM users WHERE Email = ?", user.Email).Scan(&emailExists)
+	err = DB.Table("users").Where("email = ?", user.Email).Count(&emailExists).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return fiber.ErrBadRequest
@@ -44,7 +44,7 @@ func Register(ctx *fiber.Ctx) error {
 	}
 
 	// Insert account into database
-	_, err = database.Exec("INSERT INTO users (Email, Password, Username, Currency, Balance) VALUES (?, ?, ?, ?, ?)", user.Email, hashedPassword, user.Username, user.Currency, user.Balance)
+	err = DB.Table("users").Create(&User{Email: user.Email, Password: hashedPassword, Username: user.Username, Currency: user.Currency, Balance: user.Balance}).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err

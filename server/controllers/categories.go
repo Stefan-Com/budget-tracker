@@ -34,24 +34,10 @@ func GetCategories(ctx *fiber.Ctx) error {
 	}
 
 	// Select categories from db with same ParentId as the UserId
-	rows, err := database.Query("SELECT * FROM categories WHERE ParentId = ?", UserId)
+	err = DB.Table("categories").Find(&categories, "parent_id = ?", UserId).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
-	}
-
-	// Close rows
-	defer rows.Close()
-
-	// Loop over the rows and put each of them in the "categories" slice
-	for rows.Next() {
-		var category Category
-		err = rows.Scan(&category.Id, &category.ParentId, &category.Title, &category.Description, &category.Currency, &category.Budget, &category.Spent, &category.Gotten, &category.Type, &category.Budgeted)
-		if err != nil {
-			SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
-			return err
-		}
-		categories = append(categories, category)
 	}
 
 	// Send data back to the client
@@ -80,12 +66,7 @@ func AddCategory(ctx *fiber.Ctx) error {
 	}
 
 	// Insert category into database with placeholders
-	_, err = database.Exec("INSERT INTO categories (ParentId, Title, Description, Currency, Budget, Spent, Gotten, Type, Budgeted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		&category.ParentId, &category.Title,
-		&category.Description, &category.Currency,
-		&category.Budget, &category.Spent,
-		&category.Gotten, &category.Type,
-		&category.Budgeted)
+	err = DB.Table("categories").Create(&category).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
@@ -114,7 +95,7 @@ func DeleteCategory(ctx *fiber.Ctx) error {
 	}
 
 	// Delete from table by id and parentid (respective user's id)
-	_, err = database.Exec("DELETE FROM categories WHERE Id = ? AND ParentId = ?", category.Id, category.ParentId)
+	err = DB.Table("categories").Delete(&category).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
@@ -141,8 +122,7 @@ func EditCategory(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	_, err = database.Exec("UPDATE categories SET Title = ?, Description = ?, Currency = ?, Budget = ?, Spent = ?, Gotten = ?, Type = ?, Budgeted = ? WHERE Id = ? AND ParentId = ?",
-		category.Title, category.Description, category.Currency, category.Budget, category.Spent, category.Gotten, category.Type, category.Budgeted, category.Id, category.ParentId)
+	err = DB.Table("categories").Where("id = ? AND parent_id = ?", category.Id, category.ParentId).Updates(&category).Error
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
