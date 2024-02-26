@@ -1,9 +1,7 @@
-import { PORT } from "../../utils";
-
 export async function login(info: any) {
   return new Promise(async (resolve, reject) => {
     const body = JSON.stringify(info);
-    const response = await fetch(`http://localhost:${PORT}/api/login`, {
+    const response = await fetch(`/api/login`, {
       method: "POST",
       body: body,
       credentials: "include",
