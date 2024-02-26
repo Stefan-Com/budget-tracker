@@ -1,12 +1,10 @@
-import { PORT } from "../../utils";
-
 export async function register(info: User) {
   return new Promise(async (resolve, reject) => {
     const body = JSON.stringify({
       ...info,
       balance: parseFloat(String(info.balance)),
     });
-    const response = await fetch(`http://localhost:${PORT}/api/register`, {
+    const response = await fetch(`/api/register`, {
       method: "POST",
       body: body,
       credentials: "include",

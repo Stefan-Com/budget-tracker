@@ -1,7 +1,7 @@
 // Get categories
 export async function getCategories() {
   return new Promise(async (resolve, reject) => {
-    const response = await fetch(`http://localhost:${PORT}/api/categories`, {
+    const response = await fetch(`/api/categories`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

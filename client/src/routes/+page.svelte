@@ -1,9 +1,7 @@
 <script>
-  import { PORT } from "../utils";
-
   async function logout() {
     return new Promise(async (resolve, reject) => {
-      const response = await fetch(`http://localhost:${PORT}/api/logout`, {
+      const response = await fetch(`/api/logout`, {
         method: "DELETE",
         credentials: "include",
         headers: {

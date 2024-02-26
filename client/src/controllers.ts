@@ -1,10 +1,9 @@
-import { PORT } from "./utils";
 
 //* Expenses/Incomes controllers
 export async function GetTransactions(table: "incomes" | "expenses" | null) {
   if (!table) return
   return new Promise(async (resolve, reject) => {
-    const response = await fetch(`http://localhost:${PORT}/api/transactions/${table}`, {
+    const response = await fetch(`/api/transactions/${table}`, {
       method: "GET",
       credentials: "include",
       headers: {
@@ -28,7 +27,7 @@ export async function EditTransaction(info: Transaction | null) {
       taxxed: !!info.taxxed,
       recurring: !!info.recurring,
     });
-    const response = await fetch(`http://localhost:${PORT}/api/transactions/${info.table}`, {
+    const response = await fetch(`/api/transactions/${info.table}`, {
       method: "PATCH",
       body: body,
       credentials: "include",
@@ -53,7 +52,7 @@ export async function AddTransaction(info: Transaction | null) {
       recurring: !!info.recurring,
     });
 
-    const response = await fetch(`http://localhost:${PORT}/api/transactions/${info.table}`, {
+    const response = await fetch(`/api/transactions/${info.table}`, {
       method: "POST",
       body: body,
       credentials: "include",
@@ -70,7 +69,7 @@ export async function DeleteTransaction(info: Transaction | null) {
   if (!info) return
   return new Promise(async (resolve, reject) => {
     const body = JSON.stringify({ Id: info.id });
-    const response = await fetch(`http://localhost:${PORT}/api/transactions/${info.table}`, {
+    const response = await fetch(`/api/transactions/${info.table}`, {
       method: "DELETE",
       body: body,
       credentials: "include",
@@ -87,7 +86,7 @@ export async function DeleteTransaction(info: Transaction | null) {
 export async function deleteCategory(info: Category) {
   return new Promise(async (resolve, reject) => {
     const body = JSON.stringify({ Id: info.id });
-    const response = await fetch(`http://localhost:${PORT}/api/categories`, {
+    const response = await fetch(`/api/categories`, {
       method: "DELETE",
       body: body,
       credentials: "include",
@@ -108,7 +107,7 @@ export async function addCategory(info: Category) {
       spent: parseFloat(String(info.spent)),
       gotten: parseFloat(String(info.gotten)),
     });
-    const response = await fetch(`http://localhost:${PORT}/api/categories`, {
+    const response = await fetch(`/api/categories`, {
       method: "POST",
       body: body,
       headers: {
@@ -130,7 +129,7 @@ export async function editCategory(info: Category | null) {
       budget: parseFloat(String(info.budget)),
       gotten: parseFloat(String(info.gotten)),
     });
-    const response = await fetch(`http://localhost:${PORT}/api/categories`, {
+    const response = await fetch(`/api/categories`, {
       method: "PATCH",
       body: body,
       credentials: "include",
