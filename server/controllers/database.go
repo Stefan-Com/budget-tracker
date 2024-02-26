@@ -1,44 +1,31 @@
 package controllers
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var database *sql.DB
+var DB *gorm.DB
 
-func DB() (*sql.DB, error) {
-	var user = os.Getenv("DATABASE_USER")
-	var password = os.Getenv("DATABASE_PASSWORD")
-	var url = os.Getenv("DATABASE_URL")
-	var name = os.Getenv("DATABASE_NAME")
-	var statement = fmt.Sprintf("%v:%v@tcp(%v)/%v", user, password, url, name)
+func InitDB() (*gorm.DB, error) {
+	// Get env vars
+	var user = os.Getenv("DB_USER")
+	var password = os.Getenv("DB_PASSWORD")
+	var host = os.Getenv("DB_HOST")
+	var port = os.Getenv("DB_PORT")
+	var name = os.Getenv("DB_NAME")
+	var sslmode = os.Getenv("SSLMODE")
+
+	var dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, name, port, sslmode)
 	// Open database connection
-	db, err := sql.Open("mysql", statement)
+	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		return nil, err
 	}
-	// Test database connection
-	err = db.Ping()
-	if err != nil {
-		db.Close()
-		return nil, err
-	}
-
 	// Return the database and no error
 	return db, nil
-}
-
-// Function so set up the database
-func Main() error {
-	var err error
-	database, err = DB()
-	if err != nil {
-		defer database.Close()
-		return err
-	}
-	return nil
 }

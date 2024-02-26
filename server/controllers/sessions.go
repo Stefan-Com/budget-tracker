@@ -10,6 +10,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type Session struct {
+	ID        string
+	UserID    int
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
 func GenerateSessionId(length int) (string, error) {
 	// Make an empty slice of bytes
 	bytes := make([]byte, length)
@@ -23,6 +30,7 @@ func GenerateSessionId(length int) (string, error) {
 	// Turn the slice into a string
 	return base64.URLEncoding.EncodeToString(bytes)[:length], nil
 }
+
 func AddSessionID(ID string, UserID int) error {
 	err := DeleteOldSession(ID)
 	if err != nil {
@@ -30,20 +38,22 @@ func AddSessionID(ID string, UserID int) error {
 	}
 
 	// Insert a new session into the DB
-	_, err = database.Exec("INSERT INTO sessions (ID, UserId, ExpiresAt) VALUES (?, ?, ?)", ID, UserID, time.Now().Add(7*24*time.Hour))
+	err = DB.Table("sessions").Create(&Session{ID: ID, UserID: UserID, ExpiresAt: time.Now().Add(7 * 24 * time.Hour)}).Error
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
 func DeleteOldSession(ID string) error {
-	_, err := database.Exec("DELETE FROM sessions WHERE ID = ?", ID)
+	err := DB.Table("sessions").Delete(&Session{}, "id = ?", ID).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
+
 func VerifySessionID(ctx *fiber.Ctx) (int, error) {
 	// Get cookie
 	cookie := ctx.Cookies("logged_in_cookie")
@@ -53,28 +63,19 @@ func VerifySessionID(ctx *fiber.Ctx) (int, error) {
 		return -1, http.ErrNoCookie
 	}
 
-	var UserId int
-	var ExpiresAtStr string
+	var session Session
 
 	// Select the UserID and Expiring date from db
-	row := database.QueryRow("SELECT UserId, ExpiresAt FROM sessions WHERE ID = ?", cookie)
-	err := row.Scan(&UserId, &ExpiresAtStr)
+	err := DB.Table("sessions").First(&session, "id = ?", cookie).Error
 
 	if err != nil {
 		return -1, err
 	}
 
-	dateFormat := "2006-01-02 15:04:05"
-
-	// Parse the expiration date into a time.Time data type
-	ExpiresAt, err := time.Parse(dateFormat, ExpiresAtStr)
-	if err != nil {
-		return -1, err
-	}
 	// Check if session ID is expired
-	if ExpiresAt.Before(time.Now()) {
-		return -1, errors.New("Expired session ID")
+	if session.ExpiresAt.Before(time.Now()) {
+		return -1, errors.New("expired session ID")
 	}
 
-	return UserId, nil
+	return session.UserID, nil
 }

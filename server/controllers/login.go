@@ -17,20 +17,23 @@ func Login(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	// Check if email exists
-	row := database.QueryRow("SELECT UserId, Password FROM users WHERE Email = ?", user.Email)
-	var UserID int
-	var HashedPass string
-	err = row.Scan(&UserID, &HashedPass)
+	//! First() method only works if the dbdata struct has the UserID and Password attribute with these exact names
+	//TODO: maybe find out why the fuck that happens
+	var dbdata = struct {
+		UserID   int
+		Password string
+	}{}
 
-	// Check if there aren't any rows found
+	err = DB.Table("users").Where("email = ?", user.Email).Select("user_id", "password").First(&dbdata).Error
+
+	// Check if email exists
 	if err != nil && err != sql.ErrNoRows {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
 	}
 
 	// Check if the passwords match
-	if !ComparePassword(user.Password, HashedPass) || err == sql.ErrNoRows {
+	if !ComparePassword(user.Password, dbdata.Password) {
 		SendResponse(ctx, http.StatusBadRequest, "error", "Invalid email or password")
 		return err
 	}
@@ -42,13 +45,13 @@ func Login(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	err = AddSessionID(sessionId, UserID)
+	err = AddSessionID(sessionId, dbdata.UserID)
 	if err != nil {
 		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return err
 	}
 
-	err = Logout(ctx)
+	err = DeleteSessionAndCookie(ctx)
 	ctx.Cookie(&fiber.Cookie{
 		Name:     "logged_in_cookie",
 		Value:    sessionId,

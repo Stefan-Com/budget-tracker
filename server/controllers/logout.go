@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func Logout(ctx *fiber.Ctx) error {
+func DeleteSessionAndCookie(ctx *fiber.Ctx) error {
 	// Get the value of the cookie
 	cookie := ctx.Cookies("logged_in_cookie")
 	if cookie == "" {
@@ -28,4 +28,13 @@ func Logout(ctx *fiber.Ctx) error {
 		HTTPOnly: true,
 	})
 	return nil
+}
+
+func Logout(ctx *fiber.Ctx) error {
+	err := DeleteSessionAndCookie(ctx)
+	if err != nil {
+		SendResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return err
+	}
+	return SendResponse(ctx, http.StatusOK, "success", "Succesfully logged out!")
 }
