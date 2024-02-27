@@ -7,11 +7,12 @@ import (
 )
 
 type User struct {
-	Email    string  `json:"email" validate:"email"`
-	Password string  `json:"password"`
-	Username string  `json:"username"`
-	Currency string  `json:"currency"`
-	Balance  float64 `json:"balance"`
+	UserId   int     `json:"userid" gorm:"primaryKey;autoIncrement"`
+	Email    string  `json:"email" validate:"email" gorm:"unique;not null;"`
+	Password string  `json:"password" gorm:"not null"`
+	Username string  `json:"username" gorm:"not null"`
+	Currency string  `json:"currency" gorm:"not null"`
+	Balance  float64 `json:"balance" gorm:"default:0"`
 }
 
 func Register(ctx *fiber.Ctx) error {

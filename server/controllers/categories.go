@@ -8,15 +8,15 @@ import (
 )
 
 type Category struct {
-	Id          int     `json:"id"`
-	ParentId    int     `json:"parentid"`
+	Id          int     `json:"id" gorm:"primaryKey autoIncrement"`
+	ParentId    int     `json:"parentid" gorm:"not null"`
 	Title       string  `json:"title"`
 	Description string  `json:"description"`
 	Currency    string  `json:"currency"`
-	Budget      float64 `json:"budget"`
-	Spent       float64 `json:"spent"`
-	Gotten      float64 `json:"gotten"`
-	Type        string  `json:"type"`
+	Budget      float64 `json:"budget" gorm:"default:0"`
+	Spent       float64 `json:"spent" gorm:"default:0"`
+	Gotten      float64 `json:"gotten" gorm:"default:0"`
+	Type        string  `json:"type" gorm:"default:income"`
 	Budgeted    bool    `json:"budgeted"`
 }
 

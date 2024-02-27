@@ -8,23 +8,23 @@ import (
 )
 
 type Transaction struct {
-	Table         string  `json:"table"`
-	Id            int     `json:"id"`
-	ParentId      int     `json:"parentid"`
+	Id            int     `json:"id" gorm:"primaryKey;autoIncrement"`
+	ParentId      int     `json:"parentid" gorm:"not null"`
 	Title         string  `json:"title"`
 	Description   string  `json:"description"`
 	Currency      string  `json:"currency"`
 	PaymentMethod string  `json:"paymentmethod"`
-	Amount        float64 `json:"amount"`
+	Amount        float64 `json:"amount" gorm:"default:0"`
 	Participant   string  `json:"participant"`
 	Recurring     bool    `json:"recurring"`
 	Interval      string  `json:"interval"`
 	Category      string  `json:"category"`
-	Tax           float64 `json:"tax"`
+	Tax           float64 `json:"tax" gorm:"default:0"`
 	Taxxed        bool    `json:"taxxed"`
 	Fulfilled     bool    `json:"fulfilled"`
 	DateCreated   string  `json:"datecreated"`
 	FileURL       string  `json:"fileurl"`
+	Table         string  `json:"table"`
 }
 
 func GetTransactions(ctx *fiber.Ctx) error {
