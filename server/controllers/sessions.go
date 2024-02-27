@@ -11,10 +11,10 @@ import (
 )
 
 type Session struct {
-	ID        string
-	UserID    int
-	CreatedAt time.Time
-	ExpiresAt time.Time
+	ID        string    `json:"id" gorm:"primaryKey"`
+	UserID    int       `json:"userid"`
+	CreatedAt time.Time `json:"createdat" gorm:"default:CURRENT_TIMESTAMP; not null"`
+	ExpiresAt time.Time `json:"expiresat" gorm:"not null"`
 }
 
 func GenerateSessionId(length int) (string, error) {
