@@ -111,7 +111,7 @@
               <h3>Spent: {currentCategory.spent}</h3>
             </div>
           {:else}
-            <h3>fulfilled: {currentCategory.gotten}</h3>
+            <h3>Gotten: {currentCategory.gotten}</h3>
           {/if}
         </div>
         <br />
